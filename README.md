@@ -5,7 +5,7 @@
 Clone this reposiotory
 
 ```bash
-git clone https://github.com/AIResearchLab/nav_stack.git && cd nav_stack/docker
+git clone https://github.com/CollaborativeRoboticsLab/nav_stack.git && cd nav_stack/docker
 ```
 
 Pull the Docker image and start compose (No need to run `docker compose build`)
@@ -36,7 +36,7 @@ cd navstack_ws/src
 ```
 
 ```bash
-git clone https://github.com/AIResearchLab/nav_stack.git
+git clone https://github.com/CollaborativeRoboticsLab/nav_stack.git
 cd ..
 rosdep install --from-paths src -y --ignore-src
 ```
