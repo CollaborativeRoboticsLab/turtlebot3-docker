@@ -2,8 +2,20 @@ services:
   turtlebot3-docker:
     container_name: turtlebot3-docker
     build:
-      dockerfile: Dockerfile
-    command: ["ros2", "launch", "turtlebot3-docker", "system-with-sim.launch.py", "slam:=true"]
+      context: ../
+      dockerfile: docker/Dockerfile
+    command: ["ros2", "launch", "turtlebot3-docker", "system-with-sim.launch.py", "slam:=true", "headless:=false"]
+    environment:
+      - PYTHONUNBUFFERED=1                # GUI related
+      - DISPLAY                           # GUI related
+      - QT_X11_NO_MITSHM=1                # GUI related
+      - NVIDIA_VISIBLE_DEVICES=all        # GUI related
+      - NVIDIA_DRIVER_CAPABILITIES=all    # GUI related
+      - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-0}
+      - TURTLEBOT3_MODEL=waffle
     restart: unless-stopped
     privileged: true
     network_mode: host
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw  # X11 socket for GUI
+      - ../gazebo_persistent:/root/.gazebo:rw  # Persistent Gazebo data
