@@ -3,7 +3,7 @@ services:
     container_name: turtlebot3-docker
     build:
       dockerfile: Dockerfile
-    command: ["ros2", "launch", "system-with-sim.launch", "slam:=true"]
+    command: ["ros2", "launch", "turtlebot3-docker", "system-with-sim.launch.py", "slam:=true"]
     restart: unless-stopped
     privileged: true
     network_mode: host
