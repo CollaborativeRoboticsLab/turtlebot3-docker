@@ -7,7 +7,7 @@
 FROM ros:humble-ros-base-jammy as base
 
 ## Parameters
-ENV WORKSPACE_ROOT=/navstack
+ENV WORKSPACE_ROOT=/colcon_ws
 
 #############################################################################################################################
 #####
@@ -35,7 +35,7 @@ RUN apt-get clean
 
 WORKDIR ${WORKSPACE_ROOT}/src
 
-RUN git clone https://github.com/AIResearchLab/nav_stack.git
+RUN git clone https://github.com/CollaborativeRoboticsLab/turtlebot3-docker.git
 
 RUN rm /etc/ros/rosdep/sources.list.d/20-default.list
 
@@ -78,7 +78,7 @@ RUN apt-get clean
 FROM ros:humble-ros-base-jammy as final
 
 ## Parameters
-ENV WORKSPACE_ROOT=/navstack
+ENV WORKSPACE_ROOT=/colcon_ws
 ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 
 WORKDIR /
@@ -90,13 +90,3 @@ COPY docker/workspace_entrypoint.sh /workspace_entrypoint.sh
 RUN chmod +x /workspace_entrypoint.sh
 
 ENTRYPOINT [ "/workspace_entrypoint.sh" ]
-
-CMD ros2 launch nav_stack $LAUNCH_FILENAME namespace:=$NAMESPACE \
-                                           use_sim_time:=$USE_SIM_TIME \
-                                           params_file:=${WORKSPACE_ROOT}/install/nav_stack/share/nav_stack/config/$PARAM_FILENAME \
-                                           autostart:=$AUTOSTART \
-                                           use_composition:=$USE_COMPOSITION \
-                                           use_respawn:=$USE_RESPAWN \
-                                           use_namespace:=$USE_NAMESPACE \
-                                           log_level:=$LOG_LEVEL \
-                                           slam:=$SLAM

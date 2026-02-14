@@ -1,20 +1,9 @@
 services:
-  astra_legacy:
+  turtlebot3-docker:
+    container_name: turtlebot3-docker
     build:
       dockerfile: Dockerfile
-    environment:
-      - LAUNCH_FILENAME=system.launch.py
-      - PARAM_FILENAME=nav2_default.yaml
-      - USE_COMPOSITION=False
-      - USE_RESPAWN=False
-      - USE_NAMESPACE=False
-      - NAMESPACE=''
-      - USE_SIM_TIME=False
-      - AUTOSTART=True
-      - LOG_LEVEL=info
-      - SLAM=False
+    command: ["ros2", "launch", "system-with-sim.launch", "slam:=true"]
     restart: unless-stopped
     privileged: true
     network_mode: host
-    volumes:
-      - /dev:/dev
