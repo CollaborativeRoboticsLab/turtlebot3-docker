@@ -17,6 +17,7 @@ Pull the Docker image and start compose (No need to run `docker compose build`)
 ```bash
 cd turtlebot3-docker/docker
 docker compose pull
+xhost +local:root
 docker compose up
 ```
 
@@ -31,6 +32,7 @@ Run the following commands to build locally
 ```bash
 cd turtlebot3-docker/docker
 docker compose -f compose-build.yaml build
+xhost +local:root
 docker compose -f compose-build.yaml up
 ```
 
