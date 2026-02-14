@@ -18,7 +18,7 @@ def generate_launch_description():
 
     # Get the launch directory
 
-    package_dir = get_package_share_directory('nav_stack')
+    package_dir = get_package_share_directory('turtlebot3-docker')
 
     # Create the launch configuration variables
     namespace       = LaunchConfiguration('namespace')
