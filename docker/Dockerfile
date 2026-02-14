@@ -18,16 +18,7 @@ ENV WORKSPACE_ROOT=/colcon_ws
 WORKDIR /
 
 RUN apt-get update -y
-RUN apt-get install -y --no-install-recommends ros-dev-tools \
-                                               ros-$ROS_DISTRO-tf2-eigen \
-                                               ros-$ROS_DISTRO-rmw-cyclonedds-cpp \
-                                               ros-$ROS_DISTRO-navigation2 \
-                                               ros-$ROS_DISTRO-nav2-bringup \
-                                               ros-$ROS_DISTRO-slam-toolbox \
-                                               ros-$ROS_DISTRO-gazebo-* \
-                                               ros-$ROS_DISTRO-cartographer \
-                                               ros-$ROS_DISTRO-cartographer-ros \
-                                               python3-colcon-common-extensions \
+RUN apt-get install -y --no-install-recommends python3-colcon-common-extensions \
                                                x11-apps \
                                                mesa-utils \
                                                libgl1-mesa-glx \
@@ -47,7 +38,17 @@ RUN apt-get install -y --no-install-recommends ros-dev-tools \
                                                libxcb-randr0 \
                                                libxcb-glx0 \
                                                libnss3 \
-                                               libgtk-3-0
+                                               libgtk-3-0 \
+                                               ros-dev-tools \
+                                               ros-$ROS_DISTRO-tf2-eigen \
+                                               ros-$ROS_DISTRO-rmw-cyclonedds-cpp \
+                                               ros-$ROS_DISTRO-navigation2 \
+                                               ros-$ROS_DISTRO-nav2-bringup \
+                                               ros-$ROS_DISTRO-slam-toolbox \
+                                               ros-$ROS_DISTRO-gazebo-ros-pkgs \
+                                               ros-$ROS_DISTRO-cartographer \
+                                               ros-$ROS_DISTRO-cartographer-ros
+
 RUN apt-get clean
 
 #############################################################################################################################
