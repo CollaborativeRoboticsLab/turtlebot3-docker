@@ -27,6 +27,7 @@ def generate_launch_description():
     use_respawn     = LaunchConfiguration('use_respawn')
     log_level       = LaunchConfiguration('log_level')
     slam            = LaunchConfiguration('slam')
+    use_composition = LaunchConfiguration('use_composition')
 
 
     # Create our own temporary YAML files that include substitutions
@@ -67,6 +68,10 @@ def generate_launch_description():
         'use_respawn', default_value='False',
         description='Whether to respawn if a node crashes. Applied when composition is disabled.')
 
+    declare_use_composition_cmd = DeclareLaunchArgument(
+        'use_composition', default_value='False',
+        description='Whether to use composed bringup')
+
     declare_log_level_cmd = DeclareLaunchArgument(
         'log_level', default_value='info',
         description='log level')
@@ -96,10 +101,10 @@ def generate_launch_description():
                 'use_respawn': use_respawn,
                 'use_namespace': use_namespace,
                 'log_level': log_level,
+                'slam': slam,
                 'use_sim_time': 'True',
                 'autostart': 'True',
-                'use_composition': 'True',
-                'slam': 'True'
+                'use_composition': use_composition
             }.items()),
 
         # Include turtlebot3_world.launch.py
@@ -121,7 +126,9 @@ def generate_launch_description():
     ld.add_action(declare_use_namespace_cmd)
     ld.add_action(declare_params_file_cmd)
     ld.add_action(declare_use_respawn_cmd)
+    ld.add_action(declare_use_composition_cmd)
     ld.add_action(declare_log_level_cmd)
+    ld.add_action(declare_slam_cmd)
 
     # Add the actions to launch all of the navigation nodes
     ld.add_action(bringup_cmd_group)
