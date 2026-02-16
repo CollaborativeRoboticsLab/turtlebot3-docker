@@ -4,7 +4,7 @@ services:
     build:
       context: ../
       dockerfile: docker/Dockerfile
-    command: ["ros2", "launch", "turtlebot3-docker", "system-with-sim.launch.py", "slam:=true", "headless:=false"]
+    command: ["ros2", "launch", "turtlebot3-docker", "turtlebot3_world.launch.py", "headless:=false"]
     environment:
       - PYTHONUNBUFFERED=1                # GUI related
       - DISPLAY                           # GUI related
@@ -19,3 +19,15 @@ services:
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw  # X11 socket for GUI
       - ../gazebo_persistent:/root/.gazebo:rw  # Persistent Gazebo data
+
+  navigation:
+    container_name: turtlebot3-navigation
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile
+    command: ["ros2", "launch", "turtlebot3-docker", "system.launch.py", "slam:=true"]
+    environment:
+      - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-0}
+    restart: unless-stopped
+    privileged: true
+    network_mode: host

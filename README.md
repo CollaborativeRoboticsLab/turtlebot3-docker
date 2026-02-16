@@ -75,7 +75,7 @@ colcon build
 
 ```bash
 source install/setup.bash
-ros2 launch turtlebot3-docker turtlebot3_world.launch.launch.py
+ros2 launch turtlebot3-docker turtlebot3_world.launch.py
 ```
 
 ## Launch Nav2 with SLAM Toolbox

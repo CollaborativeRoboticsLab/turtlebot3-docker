@@ -1,8 +1,8 @@
 services:
-  navigation:
-    container_name: turtlebot3-docker
+  simulation:
+    container_name: turtlebot3-simulation
     image: ghcr.io/collaborativeroboticslab/turtlebot3-docker:humble
-    command: ["ros2", "launch", "turtlebot3-docker", "system-with-sim.launch.py", "slam:=true", "headless:=false"]
+    command: ["ros2", "launch", "turtlebot3-docker", "turtlebot3_world.launch.py", "headless:=false"]
     environment:
       - PYTHONUNBUFFERED=1                # GUI related
       - DISPLAY                           # GUI related
@@ -11,9 +11,21 @@ services:
       - NVIDIA_DRIVER_CAPABILITIES=all    # GUI related
       - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-0}
       - TURTLEBOT3_MODEL=waffle
+      - ROS_LOCALHOST_ONLY=0
     restart: unless-stopped
     privileged: true
     network_mode: host
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw  # X11 socket for GUI
       - ../gazebo_persistent:/root/.gazebo:rw  # Persistent Gazebo data
+
+  navigation:
+    container_name: turtlebot3-navigation
+    image: ghcr.io/collaborativeroboticslab/turtlebot3-docker:humble
+    command: ["ros2", "launch", "turtlebot3-docker", "system.launch.py", "slam:=true"]
+    environment:
+      - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-0}
+      - ROS_LOCALHOST_ONLY=0
+    restart: unless-stopped
+    privileged: true
+    network_mode: host
