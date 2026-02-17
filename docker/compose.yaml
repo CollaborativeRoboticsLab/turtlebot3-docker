@@ -22,7 +22,7 @@ services:
   navigation:
     container_name: turtlebot3-navigation
     image: ghcr.io/collaborativeroboticslab/turtlebot3-docker:humble
-    command: ["ros2", "launch", "turtlebot3-docker", "system.launch.py", "slam:=true"]
+    command: ["ros2", "launch", "turtlebot3-docker", "system.launch.py", "slam:=true", "use_sim_time:=true"]
     environment:
       - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-0}
       - ROS_LOCALHOST_ONLY=0

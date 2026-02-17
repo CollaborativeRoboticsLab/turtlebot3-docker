@@ -25,7 +25,7 @@ services:
     build:
       context: ../
       dockerfile: docker/Dockerfile
-    command: ["ros2", "launch", "turtlebot3-docker", "system.launch.py", "slam:=true"]
+    command: ["ros2", "launch", "turtlebot3-docker", "system.launch.py", "slam:=true", "use_sim_time:=true"]
     environment:
       - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-0}
     restart: unless-stopped
