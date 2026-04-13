@@ -9,10 +9,9 @@ services:
       - QT_X11_NO_MITSHM=1                # GUI related
       - NVIDIA_VISIBLE_DEVICES=all        # GUI related
       - NVIDIA_DRIVER_CAPABILITIES=all    # GUI related
-      - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-0}
-      - TURTLEBOT3_MODEL=waffle
-      - ROS_LOCALHOST_ONLY=0
-    restart: unless-stopped
+      - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp  # Use CycloneDDS for better performance in simulation
+      - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-10}
+      - TURTLEBOT3_MODEL=burger
     privileged: true
     network_mode: host
     volumes:
@@ -22,11 +21,16 @@ services:
   navigation:
     container_name: turtlebot3-navigation
     image: ghcr.io/collaborativeroboticslab/turtlebot3-docker:jazzy
-    command: ["ros2", "launch", "turtlebot3-docker", "system.launch.py", "slam:=True", "use_sim_time:=True"]
+    command: ["ros2", "launch", "turtlebot3-docker", "system.launch.py", "slam:=True", "use_sim_time:=True", "use_rviz:=True"]
     environment:
-      - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-0}
-      - ROS_LOCALHOST_ONLY=0
-    restart: unless-stopped
+      - PYTHONUNBUFFERED=1                # GUI related
+      - DISPLAY                           # GUI related
+      - QT_X11_NO_MITSHM=1                # GUI related
+      - NVIDIA_VISIBLE_DEVICES=all        # GUI related
+      - NVIDIA_DRIVER_CAPABILITIES=all    # GUI related
+      - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp  # Use CycloneDDS for better performance in simulation
+      - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-10}
+      - TURTLEBOT3_MODEL=burger
     privileged: true
     network_mode: host
     volumes:
