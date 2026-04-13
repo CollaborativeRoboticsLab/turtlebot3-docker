@@ -39,8 +39,7 @@ def generate_launch_description():
     resolution = LaunchConfiguration('resolution', default='0.05')
     publish_period_sec = LaunchConfiguration('publish_period_sec', default='1.0')
 
-    rviz_config_dir = os.path.join(get_package_share_directory('turtlebot3_cartographer'),
-                                   'rviz', 'tb3_cartographer.rviz')
+    rviz_config_dir = os.path.join(turtlebot3_cartographer_prefix, 'rviz', 'tb3_cartographer.rviz')
 
     return LaunchDescription([
         DeclareLaunchArgument(
@@ -76,7 +75,7 @@ def generate_launch_description():
             description='OccupancyGrid publishing period'),
 
         IncludeLaunchDescription(
-            PythonLaunchDescriptionSource([ThisLaunchFileDir(), '/occupancy_grid.launch.py']),
+            PythonLaunchDescriptionSource([turtlebot3_cartographer_prefix, '/launch', '/occupancy_grid.launch.py']),
             launch_arguments={'use_sim_time': use_sim_time, 'resolution': resolution,
                               'publish_period_sec': publish_period_sec}.items(),
         ),

@@ -23,6 +23,7 @@ def generate_launch_description():
     slam = LaunchConfiguration('slam')
     map_yaml = LaunchConfiguration('map')
     nav_params_file = LaunchConfiguration('params_file')
+    nav_use_rviz = LaunchConfiguration('use_rviz')
 
     cartographer_config_dir = LaunchConfiguration('cartographer_config_dir')
     configuration_basename = LaunchConfiguration('configuration_basename')
@@ -33,14 +34,20 @@ def generate_launch_description():
 
     declare_use_sim_time_cmd = DeclareLaunchArgument(
         'use_sim_time',
-        default_value='false',
+        default_value='False',
         description='Use simulation (Gazebo) clock if true',
     )
 
     declare_slam_cmd = DeclareLaunchArgument(
         'slam',
-        default_value='true',
+        default_value='True',
         description='Whether run a SLAM',
+    )
+
+    declare_use_rviz_cmd = DeclareLaunchArgument(
+        'use_rviz',
+        default_value='True' if os.environ.get('DISPLAY') else 'False',
+        description='Whether to launch RViz2 (navigation)',
     )
 
     declare_map_cmd = DeclareLaunchArgument(
@@ -78,6 +85,8 @@ def generate_launch_description():
     )
 
     turtlebot3_cartographer_prefix = get_package_share_directory('turtlebot3_cartographer')
+    nav2_launch_file_dir = os.path.join(get_package_share_directory('nav2_bringup'), 'launch')
+    
     declare_cartographer_config_dir_cmd = DeclareLaunchArgument(
         'cartographer_config_dir',
         default_value=os.path.join(turtlebot3_cartographer_prefix, 'config'),
