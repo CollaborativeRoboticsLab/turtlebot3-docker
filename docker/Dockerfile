@@ -4,7 +4,7 @@
 #----
 #---------------------------------------------------------------------------------------------------------------------------
 
-FROM ros:humble-ros-base-jammy as base
+FROM ros:jazzy as base
 
 ## Parameters
 ENV WORKSPACE_ROOT=/colcon_ws
