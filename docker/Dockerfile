@@ -56,7 +56,7 @@ RUN rosdep init && rosdep update && rosdep install --from-paths ${WORKSPACE_ROOT
 
 WORKDIR ${WORKSPACE_ROOT}
 
-RUN . /opt/ros/humble/setup.sh && colcon build
+RUN . /opt/ros/$ROS_DISTRO/setup.sh && colcon build
 
 WORKDIR /
 
