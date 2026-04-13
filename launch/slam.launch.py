@@ -1,4 +1,4 @@
-# Copyright (c) 2020 Samsung Research Russia
+# Copyright 2019 Open Source Robotics Foundation, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,135 +11,82 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+# Author: Darby Lim
 
 import os
 
 from ament_index_python.packages import get_package_share_directory
-
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
-from launch.conditions import IfCondition, UnlessCondition
+from launch.actions import DeclareLaunchArgument
+from launch.actions import IncludeLaunchDescription
+from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
+from launch.substitutions import ThisLaunchFileDir
 from launch_ros.actions import Node
-from launch_ros.descriptions import ParameterFile
-from nav2_common.launch import HasNodeParams, RewrittenYaml
 
 
 def generate_launch_description():
+    use_sim_time = LaunchConfiguration('use_sim_time', default='false')
+    use_rviz = LaunchConfiguration('use_rviz', default='true')
+    turtlebot3_cartographer_prefix = get_package_share_directory('turtlebot3_cartographer')
+    cartographer_config_dir = LaunchConfiguration('cartographer_config_dir', default=os.path.join(
+                                                  turtlebot3_cartographer_prefix, 'config'))
+    configuration_basename = LaunchConfiguration('configuration_basename',
+                                                 default='turtlebot3_lds_2d.lua')
 
-    # Input parameters declaration
-    namespace       = LaunchConfiguration('namespace')
-    use_sim_time    = LaunchConfiguration('use_sim_time')
-    autostart       = LaunchConfiguration('autostart')
-    params_file     = LaunchConfiguration('params_file')
-    use_respawn     = LaunchConfiguration('use_respawn')
-    log_level       = LaunchConfiguration('log_level')
+    resolution = LaunchConfiguration('resolution', default='0.05')
+    publish_period_sec = LaunchConfiguration('publish_period_sec', default='1.0')
 
-    # Variables
-    lifecycle_nodes = ['map_saver']
+    rviz_config_dir = os.path.join(get_package_share_directory('turtlebot3_cartographer'),
+                                   'rviz', 'tb3_cartographer.rviz')
 
-    # Getting directories and launch-files
-    package_dir         = get_package_share_directory('turtlebot3-docker')
-    slam_toolbox_dir    = get_package_share_directory('slam_toolbox')
+    return LaunchDescription([
+        DeclareLaunchArgument(
+            'cartographer_config_dir',
+            default_value=cartographer_config_dir,
+            description='Full path to config file to load'),
+        DeclareLaunchArgument(
+            'configuration_basename',
+            default_value=configuration_basename,
+            description='Name of lua file for cartographer'),
+        DeclareLaunchArgument(
+            'use_sim_time',
+            default_value='false',
+            description='Use simulation (Gazebo) clock if true'),
 
-    slam_launch_file = os.path.join(slam_toolbox_dir, 'launch', 'online_sync_launch.py')
-
-    # Create our own temporary YAML files that include substitutions
-    param_substitutions = {
-        'use_sim_time': use_sim_time}
-
-    configured_params = ParameterFile(
-        RewrittenYaml(
-            source_file=params_file,
-            root_key=namespace,
-            param_rewrites=param_substitutions,
-            convert_types=True),
-            allow_substs=True)
-
-    # Declare the launch arguments
-    declare_namespace_cmd = DeclareLaunchArgument(
-        'namespace',
-        default_value='',
-        description='Top-level namespace')
-
-    declare_use_sim_time_cmd = DeclareLaunchArgument(
-        'use_sim_time',
-        default_value='True',
-        description='Use simulation (Gazebo) clock if true')
-    
-    declare_autostart_cmd = DeclareLaunchArgument(
-        'autostart', default_value='True',
-        description='Automatically startup the nav2 stack')
-    
-    declare_params_file_cmd = DeclareLaunchArgument(
-        'params_file',
-        default_value=os.path.join(package_dir, 'config', 'nav2_default.yaml'),
-        description='Full path to the ROS2 parameters file to use for all launched nodes')
-
-    declare_use_respawn_cmd = DeclareLaunchArgument(
-        'use_respawn', default_value='False',
-        description='Whether to respawn if a node crashes. Applied when composition is disabled.')
-
-    declare_log_level_cmd = DeclareLaunchArgument(
-        'log_level', default_value='info',
-        description='log level')
-
-    # Nodes launching commands
-
-    start_map_saver_server_cmd = Node(
-            package='nav2_map_server',
-            executable='map_saver_server',
+        Node(
+            package='cartographer_ros',
+            executable='cartographer_node',
+            name='cartographer_node',
             output='screen',
-            respawn=use_respawn,
-            respawn_delay=2.0,
-            arguments=['--ros-args', '--log-level', log_level],
-            parameters=[configured_params])
+            parameters=[{'use_sim_time': use_sim_time}],
+            arguments=['-configuration_directory', cartographer_config_dir,
+                       '-configuration_basename', configuration_basename]),
 
-    start_lifecycle_manager_cmd = Node(
-            package='nav2_lifecycle_manager',
-            executable='lifecycle_manager',
-            name='lifecycle_manager_slam',
-            output='screen',
-            arguments=['--ros-args', '--log-level', log_level],
-            parameters=[{'use_sim_time': use_sim_time},
-                        {'autostart': autostart},
-                        {'node_names': lifecycle_nodes}])
+        DeclareLaunchArgument(
+            'resolution',
+            default_value=resolution,
+            description='Resolution of a grid cell in the published occupancy grid'),
 
-    # If the provided param file doesn't have slam_toolbox params, we must remove the 'params_file'
-    # LaunchConfiguration, or it will be passed automatically to slam_toolbox and will not load
-    # the default file
-    
-    has_slam_toolbox_params = HasNodeParams(source_file=params_file,
-                                            node_name='slam_toolbox')
+        DeclareLaunchArgument(
+            'publish_period_sec',
+            default_value=publish_period_sec,
+            description='OccupancyGrid publishing period'),
 
-    start_slam_toolbox_cmd = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(slam_launch_file),
-        launch_arguments={'use_sim_time': use_sim_time}.items(),
-        condition=UnlessCondition(has_slam_toolbox_params))
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([ThisLaunchFileDir(), '/occupancy_grid.launch.py']),
+            launch_arguments={'use_sim_time': use_sim_time, 'resolution': resolution,
+                              'publish_period_sec': publish_period_sec}.items(),
+        ),
 
-    start_slam_toolbox_cmd_with_params = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(slam_launch_file),
-        launch_arguments={'use_sim_time': use_sim_time,
-                          'slam_params_file': params_file}.items(),
-        condition=IfCondition(has_slam_toolbox_params))
-
-    ld = LaunchDescription()
-
-    # Declare the launch options
-    ld.add_action(declare_namespace_cmd)
-    ld.add_action(declare_params_file_cmd)
-    ld.add_action(declare_use_sim_time_cmd)
-    ld.add_action(declare_autostart_cmd)
-    ld.add_action(declare_use_respawn_cmd)
-    ld.add_action(declare_log_level_cmd)
-
-    # Running Map Saver Server
-    ld.add_action(start_map_saver_server_cmd)
-    ld.add_action(start_lifecycle_manager_cmd)
-
-    # Running SLAM Toolbox (Only one of them will be run)
-    ld.add_action(start_slam_toolbox_cmd)
-    ld.add_action(start_slam_toolbox_cmd_with_params)
-
-    return ld
+        Node(
+            package='rviz2',
+            executable='rviz2',
+            name='rviz2',
+            arguments=['-d', rviz_config_dir],
+            parameters=[{'use_sim_time': use_sim_time}],
+            condition=IfCondition(use_rviz),
+            output='screen'),
+    ])

@@ -1,7 +1,7 @@
 services:
   simulation:
     container_name: turtlebot3-simulation
-    image: ghcr.io/collaborativeroboticslab/turtlebot3-docker:humble
+    image: ghcr.io/collaborativeroboticslab/turtlebot3-docker:jazzy
     command: ["ros2", "launch", "turtlebot3-docker", "turtlebot3_world.launch.py", "headless:=false"]
     environment:
       - PYTHONUNBUFFERED=1                # GUI related

@@ -3,156 +3,141 @@ import os
 from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
-from launch.actions import (DeclareLaunchArgument, GroupAction,
-                            IncludeLaunchDescription, SetEnvironmentVariable)
+from launch.actions import (
+    DeclareLaunchArgument,
+    GroupAction,
+    IncludeLaunchDescription,
+    SetEnvironmentVariable,
+)
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, PythonExpression
-from launch_ros.actions import Node
-from launch_ros.actions import PushRosNamespace
-from launch_ros.descriptions import ParameterFile
-from nav2_common.launch import RewrittenYaml, ReplaceString
+from launch.substitutions import LaunchConfiguration
 
 
 def generate_launch_description():
 
-    # Get the launch directory
-
     package_dir = get_package_share_directory('turtlebot3-docker')
 
-    # Create the launch configuration variables
-    namespace       = LaunchConfiguration('namespace')
-    use_sim_time    = LaunchConfiguration('use_sim_time')
-    autostart       = LaunchConfiguration('autostart')
-    params_file     = LaunchConfiguration('params_file')
-    use_composition = LaunchConfiguration('use_composition')
-    use_namespace   = LaunchConfiguration('use_namespace')
-    use_respawn     = LaunchConfiguration('use_respawn')
-    log_level       = LaunchConfiguration('log_level')
-    slam            = LaunchConfiguration('slam')
+    # Launch configuration variables (match navigation.launch.py and slam.launch.py)
+    use_sim_time = LaunchConfiguration('use_sim_time')
+    slam = LaunchConfiguration('slam')
+    map_yaml = LaunchConfiguration('map')
+    nav_params_file = LaunchConfiguration('params_file')
 
-    remappings = [('/tf', 'tf'),
-                  ('/tf_static', 'tf_static')]
+    cartographer_config_dir = LaunchConfiguration('cartographer_config_dir')
+    configuration_basename = LaunchConfiguration('configuration_basename')
+    resolution = LaunchConfiguration('resolution')
+    publish_period_sec = LaunchConfiguration('publish_period_sec')
 
-    # Create our own temporary YAML files that include substitutions
-    param_substitutions = {
-        'use_sim_time': use_sim_time}
-
-    # Only it applys when `use_namespace` is True.
-    # '<robot_namespace>' keyword shall be replaced by 'namespace' launch argument
-    # in config file 'nav2_multirobot_params.yaml' as a default & example.
-    # User defined config file should contain '<robot_namespace>' keyword for the replacements.
-    params_file = ReplaceString(
-        source_file=params_file,
-        replacements={'<robot_namespace>': ('/', namespace)},
-        condition=IfCondition(use_namespace))
-
-    configured_params = ParameterFile(
-        RewrittenYaml(
-            source_file=params_file,
-            root_key=namespace,
-            param_rewrites=param_substitutions,
-            convert_types=True),
-        allow_substs=True)
-
-    stdout_linebuf_envvar = SetEnvironmentVariable(
-        'RCUTILS_LOGGING_BUFFERED_STREAM', '1')
-
-    declare_namespace_cmd = DeclareLaunchArgument(
-        'namespace',
-        default_value='',
-        description='Top-level namespace')
+    stdout_linebuf_envvar = SetEnvironmentVariable('RCUTILS_LOGGING_BUFFERED_STREAM', '1')
 
     declare_use_sim_time_cmd = DeclareLaunchArgument(
         'use_sim_time',
-        default_value='False',
-        description='Use simulation (Gazebo) clock if true')
-    
-    declare_params_file_cmd = DeclareLaunchArgument(
-        'params_file',
-        default_value=os.path.join(package_dir, 'config', 'nav2_default.yaml'),
-        description='Full path to the ROS2 parameters file to use for all launched nodes')
-
-    declare_autostart_cmd = DeclareLaunchArgument(
-        'autostart', default_value='True',
-        description='Automatically startup the nav2 stack')
-
-    declare_use_composition_cmd = DeclareLaunchArgument(
-        'use_composition', default_value='False',
-        description='Whether to use composed bringup')
-    
-    declare_use_respawn_cmd = DeclareLaunchArgument(
-        'use_respawn', default_value='False',
-        description='Whether to respawn if a node crashes. Applied when composition is disabled.')
-
-    declare_log_level_cmd = DeclareLaunchArgument(
-        'log_level', default_value='info',
-        description='log level')
-    
-    declare_use_namespace_cmd = DeclareLaunchArgument(
-        'use_namespace',
-        default_value='False',
-        description='Whether to apply a namespace to the navigation stack')
+        default_value='false',
+        description='Use simulation (Gazebo) clock if true',
+    )
 
     declare_slam_cmd = DeclareLaunchArgument(
         'slam',
-        default_value='True',
-        description='Whether run a SLAM')
+        default_value='true',
+        description='Whether run a SLAM',
+    )
 
-    # Specify the actions
+    declare_map_cmd = DeclareLaunchArgument(
+        'map',
+        default_value=os.path.join(
+            get_package_share_directory('turtlebot3_navigation2'),
+            'map',
+            'map.yaml',
+        ),
+        description='Full path to map file to load',
+    )
+
+    # Keep arg name as 'params_file' to match navigation.launch.py
+    turtlebot3_model = os.environ.get('TURTLEBOT3_MODEL', 'burger')
+    param_file_name = turtlebot3_model + '.yaml'
+    ros_distro = os.environ.get('ROS_DISTRO')
+    if ros_distro == 'humble':
+        nav_default_params = os.path.join(
+            get_package_share_directory('turtlebot3_navigation2'),
+            'param',
+            ros_distro,
+            param_file_name,
+        )
+    else:
+        nav_default_params = os.path.join(
+            get_package_share_directory('turtlebot3_navigation2'),
+            'param',
+            param_file_name,
+        )
+
+    declare_params_file_cmd = DeclareLaunchArgument(
+        'params_file',
+        default_value=nav_default_params,
+        description='Full path to param file to load',
+    )
+
+    turtlebot3_cartographer_prefix = get_package_share_directory('turtlebot3_cartographer')
+    declare_cartographer_config_dir_cmd = DeclareLaunchArgument(
+        'cartographer_config_dir',
+        default_value=os.path.join(turtlebot3_cartographer_prefix, 'config'),
+        description='Full path to config file to load',
+    )
+
+    declare_configuration_basename_cmd = DeclareLaunchArgument(
+        'configuration_basename',
+        default_value='turtlebot3_lds_2d.lua',
+        description='Name of lua file for cartographer',
+    )
+
+    declare_resolution_cmd = DeclareLaunchArgument(
+        'resolution',
+        default_value='0.05',
+        description='Resolution of a grid cell in the published occupancy grid',
+    )
+
+    declare_publish_period_sec_cmd = DeclareLaunchArgument(
+        'publish_period_sec',
+        default_value='1.0',
+        description='OccupancyGrid publishing period',
+    )
+
     bringup_cmd_group = GroupAction([
-        PushRosNamespace(
-            condition=IfCondition(use_namespace),
-            namespace=namespace),
+        # Navigation stack (includes RViz)
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(os.path.join(package_dir, 'launch', 'navigation.launch.py')),
+            launch_arguments={
+                'map': map_yaml,
+                'use_sim_time': use_sim_time,
+                'params_file': nav_params_file,
+            }.items(),
+        ),
 
-        Node(
-            condition=IfCondition(use_composition),
-            name='nav2_container',
-            package='rclcpp_components',
-            executable='component_container_isolated',
-            parameters=[configured_params, {'autostart': autostart}],
-            arguments=['--ros-args', '--log-level', log_level],
-            remappings=remappings,
-            output='screen'),
-
+        # SLAM stack (disable RViz here to avoid launching RViz twice)
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(os.path.join(package_dir, 'launch', 'slam.launch.py')),
             condition=IfCondition(slam),
-            launch_arguments={'namespace': namespace,
-                              'use_sim_time': use_sim_time,
-                              'autostart': autostart,
-                              'use_respawn': use_respawn,
-                              'params_file': params_file}.items()),
-
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(os.path.join(package_dir, 'launch', 'navigation.launch.py')),
-            launch_arguments={'namespace': namespace,
-                              'use_sim_time': use_sim_time,
-                              'autostart': autostart,
-                              'params_file': params_file,
-                              'use_composition': use_composition,
-                              'use_respawn': use_respawn,
-                              'container_name': 'nav2_container'}.items()),
+            launch_arguments={
+                'use_sim_time': use_sim_time,
+                'use_rviz': 'false',
+                'cartographer_config_dir': cartographer_config_dir,
+                'configuration_basename': configuration_basename,
+                'resolution': resolution,
+                'publish_period_sec': publish_period_sec,
+            }.items(),
+        ),
     ])
 
-    # Create the launch description and populate
     ld = LaunchDescription()
-
-    # Set environment variables
     ld.add_action(stdout_linebuf_envvar)
-
-    # Declare the launch options
-    ld.add_action(declare_namespace_cmd)
-    ld.add_action(declare_use_namespace_cmd)
-    ld.add_action(declare_slam_cmd)
     ld.add_action(declare_use_sim_time_cmd)
+    ld.add_action(declare_slam_cmd)
+    ld.add_action(declare_map_cmd)
     ld.add_action(declare_params_file_cmd)
-    ld.add_action(declare_autostart_cmd)
-    ld.add_action(declare_use_composition_cmd)
-    ld.add_action(declare_use_respawn_cmd)
-    ld.add_action(declare_log_level_cmd)
-
-    # Add the actions to launch all of the navigation nodes
+    ld.add_action(declare_cartographer_config_dir_cmd)
+    ld.add_action(declare_configuration_basename_cmd)
+    ld.add_action(declare_resolution_cmd)
+    ld.add_action(declare_publish_period_sec_cmd)
     ld.add_action(bringup_cmd_group)
 
     return ld
